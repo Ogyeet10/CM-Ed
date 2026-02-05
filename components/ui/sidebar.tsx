@@ -201,7 +201,7 @@ const Sidebar = React.forwardRef<
       return (
         <Sheet onOpenChange={setOpenMobile} open={openMobile} {...props}>
           <SheetContent
-            className="w-[var(--sidebar-width)] bg-sidebar p-0 text-sidebar-foreground [&>button]:hidden"
+            className="w-[var(--sidebar-width)] border-r-2 border-foreground bg-sidebar p-0 text-sidebar-foreground [&>button]:hidden"
             data-mobile="true"
             data-sidebar="sidebar"
             side={side}
@@ -256,7 +256,7 @@ const Sidebar = React.forwardRef<
           {...props}
         >
           <div
-            className="flex h-full w-full flex-col bg-sidebar group-data-[variant=floating]:rounded-lg group-data-[variant=floating]:border group-data-[variant=floating]:border-sidebar-border group-data-[variant=floating]:shadow"
+            className="flex h-full w-full flex-col border-r-2 border-foreground bg-sidebar group-data-[variant=floating]:border-2 group-data-[variant=floating]:border-sidebar-border"
             data-sidebar="sidebar"
           >
             {children}

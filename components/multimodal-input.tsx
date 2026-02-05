@@ -317,7 +317,7 @@ function PureMultimodalInput({
       />
 
       <PromptInput
-        className="rounded-xl border border-border bg-background p-3 shadow-xs transition-all duration-200 focus-within:border-border hover:border-muted-foreground/50"
+        className="border-2 border-foreground bg-background p-3 shadow-[4px_4px_0px_var(--brutalist-accent)] transition-all duration-200 hover:shadow-[5px_5px_0px_var(--brutalist-accent)] focus-within:border-primary"
         onSubmit={(event) => {
           event.preventDefault();
           if (!input.trim() && attachments.length === 0) {
@@ -365,13 +365,13 @@ function PureMultimodalInput({
         )}
         <div className="flex flex-row items-start gap-1 sm:gap-2">
           <PromptInputTextarea
-            className="grow resize-none border-0! border-none! bg-transparent p-2 text-base outline-none ring-0 [-ms-overflow-style:none] [scrollbar-width:none] placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 [&::-webkit-scrollbar]:hidden"
+            className="grow resize-none border-0! border-none! bg-transparent p-2 font-mono text-sm tracking-wide outline-none ring-0! ring-offset-0! shadow-none! [-ms-overflow-style:none] [scrollbar-width:none] placeholder:text-muted-foreground placeholder:uppercase focus-visible:outline-none! focus-visible:ring-0! focus-visible:ring-offset-0! [&::-webkit-scrollbar]:hidden"
             data-testid="multimodal-input"
             disableAutoResize={true}
             maxHeight={200}
             minHeight={44}
             onChange={handleInput}
-            placeholder="Send a message..."
+            placeholder="TYPE YOUR MESSAGE..."
             ref={textareaRef}
             rows={1}
             value={input}
@@ -394,7 +394,7 @@ function PureMultimodalInput({
             <StopButton setMessages={setMessages} stop={stop} />
           ) : (
             <PromptInputSubmit
-              className="size-8 rounded-full bg-primary text-primary-foreground transition-colors duration-200 hover:bg-primary/90 disabled:bg-muted disabled:text-muted-foreground"
+              className="size-8 bg-primary text-primary-foreground shadow-[2px_2px_0px_var(--brutalist-accent)] transition-all duration-200 hover:bg-primary/90 hover:shadow-[3px_3px_0px_var(--brutalist-accent)] active:shadow-none active:translate-x-[2px] active:translate-y-[2px] disabled:bg-muted disabled:text-muted-foreground disabled:shadow-none"
               data-testid="send-button"
               disabled={!input.trim() || uploadQueue.length > 0}
               status={status}
@@ -542,7 +542,7 @@ function PureStopButton({
 }) {
   return (
     <Button
-      className="size-7 rounded-full bg-foreground p-1 text-background transition-colors duration-200 hover:bg-foreground/90 disabled:bg-muted disabled:text-muted-foreground"
+      className="size-8 border-2 border-foreground bg-foreground p-1 text-background shadow-[2px_2px_0px_var(--primary)] transition-all duration-150 hover:bg-foreground/90 hover:shadow-[3px_3px_0px_var(--primary)] active:shadow-none active:translate-x-[2px] active:translate-y-[2px] disabled:bg-muted disabled:text-muted-foreground"
       data-testid="stop-button"
       onClick={(event) => {
         event.preventDefault();

@@ -71,9 +71,13 @@ export function AppSidebar({ user }: { user: User | undefined }) {
                   setOpenMobile(false);
                 }}
               >
-                <span className="cursor-pointer rounded-md px-2 font-semibold text-lg hover:bg-muted">
-                  Chatbot
-                </span>
+                <div
+                  className="flex cursor-pointer items-center rounded-md px-2 font-mono text-lg font-bold uppercase tracking-tight hover:bg-muted"
+                  style={{ fontFamily: "'Bebas Neue', Impact, sans-serif" }}
+                >
+                  <span className="text-foreground">CM</span>
+                  <span className="text-primary">ED</span>
+                </div>
               </Link>
               <div className="flex flex-row gap-1">
                 {user && (

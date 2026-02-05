@@ -15,27 +15,27 @@ type SuggestedActionsProps = {
 
 function PureSuggestedActions({ chatId, sendMessage }: SuggestedActionsProps) {
   const suggestedActions = [
-    "What are the advantages of using Next.js?",
-    "Write code to demonstrate Dijkstra's algorithm",
-    "Help me write an essay about Silicon Valley",
-    "What is the weather in San Francisco?",
+    "EXPLAIN THE CME GROUP MARKET STRUCTURE",
+    "WHAT ARE FUTURES CONTRACTS?",
+    "HELP ME UNDERSTAND OPTIONS TRADING",
+    "SHOW ME CURRENT MARKET CONDITIONS",
   ];
 
   return (
     <div
-      className="grid w-full gap-2 sm:grid-cols-2"
+      className="grid w-full gap-3 sm:grid-cols-2"
       data-testid="suggested-actions"
     >
       {suggestedActions.map((suggestedAction, index) => (
         <motion.div
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: 20 }}
-          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -20 }}
+          initial={{ opacity: 0, x: -20 }}
           key={suggestedAction}
-          transition={{ delay: 0.05 * index }}
+          transition={{ delay: 0.1 * index }}
         >
           <Suggestion
-            className="h-auto w-full whitespace-normal p-3 text-left"
+            className="h-auto w-full whitespace-normal border-2 border-foreground bg-background p-4 font-mono text-left text-xs uppercase tracking-wider shadow-[3px_3px_0px_var(--brutalist-accent)] transition-all duration-150 hover:bg-accent hover:shadow-[4px_4px_0px_var(--brutalist-accent)] hover:translate-x-[-1px] hover:translate-y-[-1px] active:shadow-none active:translate-x-[3px] active:translate-y-[3px]"
             onClick={(suggestion) => {
               window.history.pushState({}, "", `/chat/${chatId}`);
               sendMessage({
@@ -45,7 +45,7 @@ function PureSuggestedActions({ chatId, sendMessage }: SuggestedActionsProps) {
             }}
             suggestion={suggestedAction}
           >
-            {suggestedAction}
+            <span className="text-primary">&gt;</span> {suggestedAction}
           </Suggestion>
         </motion.div>
       ))}

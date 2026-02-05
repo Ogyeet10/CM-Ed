@@ -11,93 +11,166 @@
 @plugin "tailwindcss-animate";
 @plugin "@tailwindcss/typography";
 
-/* define design tokens (light mode) */
+/* ============================================
+   BRUTALIST ORANGE THEME - CMed Masterpiece
+   ============================================
+   Raw. Harsh. Unapologetically Bold.
+*/
+
+/* define design tokens (light mode - brutalist) */
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.67 0.16 58);
-  --primary-foreground: oklch(0.99 0.02 95);
-  --secondary: oklch(0.967 0.001 286.375);
-  --secondary-foreground: oklch(0.21 0.006 285.885);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.58 0.22 27);
-  --destructive-foreground: oklch(0.985 0 0);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.67 0.12 58);
-  --chart-1: oklch(0.88 0.15 92);
-  --chart-2: oklch(0.77 0.16 70);
-  --chart-3: oklch(0.67 0.16 58);
-  --chart-4: oklch(0.56 0.15 49);
-  --chart-5: oklch(0.47 0.12 46);
-  --radius: 0.125rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.67 0.16 58);
-  --sidebar-primary-foreground: oklch(0.99 0.02 95);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.67 0.12 58);
+  /* Core brutalist palette */
+  --background: #fafafa;
+  --foreground: #0a0a0a;
+  --card: #ffffff;
+  --card-foreground: #0a0a0a;
+  --popover: #ffffff;
+  --popover-foreground: #0a0a0a;
+
+  /* ORANGE - The Star */
+  --primary: #ff5e00;
+  --primary-foreground: #ffffff;
+  --primary-glow: #ff5e0040;
+
+  /* Secondary - raw concrete */
+  --secondary: #e5e5e5;
+  --secondary-foreground: #0a0a0a;
+
+  /* Muted - industrial gray */
+  --muted: #f0f0f0;
+  --muted-foreground: #666666;
+
+  /* Accent - subtle warmth */
+  --accent: #fff0e6;
+  --accent-foreground: #0a0a0a;
+
+  /* Destructive - harsh red */
+  --destructive: #cc0000;
+  --destructive-foreground: #ffffff;
+
+  /* Borders - THICK and VISIBLE */
+  --border: #0a0a0a;
+  --border-light: #cccccc;
+  --input: #0a0a0a;
+  --ring: #ff5e00;
+
+  /* Chart colors - brutalist orange scale */
+  --chart-1: #ff5e00;
+  --chart-2: #ff7a2e;
+  --chart-3: #ff9654;
+  --chart-4: #ffb27a;
+  --chart-5: #ffcea0;
+
+  /* NO ROUNDED CORNERS - ZERO */
+  --radius: 0px;
+
+  /* Sidebar - stark white */
+  --sidebar: #ffffff;
+  --sidebar-foreground: #0a0a0a;
+  --sidebar-primary: #ff5e00;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #fff0e6;
+  --sidebar-accent-foreground: #0a0a0a;
+  --sidebar-border: #0a0a0a;
+  --sidebar-ring: #ff5e00;
+
+  /* Brutalist custom tokens */
+  --brutalist-orange: #ff5e00;
+  --brutalist-orange-light: #ff7a2e;
+  --brutalist-orange-dark: #cc4a00;
+  --brutalist-black: #0a0a0a;
+  --brutalist-white: #fafafa;
+  --brutalist-concrete: #e5e5e5;
+
+  /* Accent color for borders/shadows - black in light mode */
+  --brutalist-accent: #0a0a0a;
+
+  --brutalist-shadow: 4px 4px 0px var(--brutalist-accent);
+  --brutalist-shadow-sm: 2px 2px 0px var(--brutalist-accent);
+  --brutalist-shadow-lg: 6px 6px 0px var(--brutalist-accent);
+  --brutalist-shadow-orange: 4px 4px 0px #ff5e00;
 }
 
-/* define design tokens (dark mode) */
+/* define design tokens (dark mode - brutalist) */
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.77 0.16 70);
-  --primary-foreground: oklch(0.28 0.07 46);
-  --secondary: oklch(0.274 0.006 286.033);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.371 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --destructive-foreground: oklch(0.985 0 0);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.77 0.14 70);
-  --chart-1: oklch(0.88 0.15 92);
-  --chart-2: oklch(0.77 0.16 70);
-  --chart-3: oklch(0.67 0.16 58);
-  --chart-4: oklch(0.56 0.15 49);
-  --chart-5: oklch(0.47 0.12 46);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.77 0.16 70);
-  --sidebar-primary-foreground: oklch(0.28 0.07 46);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --background: #0a0a0a;
+  --foreground: #e5e5e5;
+  --card: #1a1a1a;
+  --card-foreground: #e5e5e5;
+  --popover: #1a1a1a;
+  --popover-foreground: #e5e5e5;
+
+  /* ORANGE - The Star (and now the accent!) */
+  --primary: #ff5e00;
+  --primary-foreground: #0a0a0a;
+  --primary-glow: #ff5e0060;
+
+  /* Secondary - dark concrete */
+  --secondary: #2a2a2a;
+  --secondary-foreground: #e5e5e5;
+
+  /* Muted - deep gray */
+  --muted: #1a1a1a;
+  --muted-foreground: #888888;
+
+  /* Accent - dark warmth */
+  --accent: #2a1a10;
+  --accent-foreground: #e5e5e5;
+
+  /* Destructive */
+  --destructive: #ff3333;
+  --destructive-foreground: #e5e5e5;
+
+  /* Borders - ORANGE is the accent in dark mode */
+  --border: #ff5e00;
+  --border-light: #333333;
+  --input: #333333;
+  --ring: #ff5e00;
+
+  /* Chart colors */
+  --chart-1: #ff5e00;
+  --chart-2: #ff7a2e;
+  --chart-3: #ff9654;
+  --chart-4: #ffb27a;
+  --chart-5: #ffcea0;
+
+  /* Sidebar - dark brutalist with orange accents */
+  --sidebar: #0a0a0a;
+  --sidebar-foreground: #e5e5e5;
+  --sidebar-primary: #ff5e00;
+  --sidebar-primary-foreground: #0a0a0a;
+  --sidebar-accent: #2a1a10;
+  --sidebar-accent-foreground: #e5e5e5;
+  --sidebar-border: #ff5e00;
+  --sidebar-ring: #ff5e00;
+
+  /* Dark mode: accent is darker burnt orange for shadows */
+  --brutalist-accent: #662900;
+
+  /* Dark mode shadows - darker burnt orange for depth */
+  --brutalist-shadow: 4px 4px 0px #662900;
+  --brutalist-shadow-sm: 2px 2px 0px #662900;
+  --brutalist-shadow-lg: 6px 6px 0px #662900;
+  --brutalist-shadow-orange: 4px 4px 0px #662900;
 }
 
 /* define theme */
 @theme {
-  --font-sans: var(--font-geist);
-  --font-mono: var(--font-geist-mono);
+  /* BRUTALIST FONTS - use CSS variable from Next.js font */
+  --font-sans: var(--font-mono, "JetBrains Mono"), ui-monospace, monospace;
+  --font-mono: var(--font-mono, "JetBrains Mono"), ui-monospace, monospace;
+  --font-display: "Bebas Neue", "Impact", sans-serif;
 
   --breakpoint-toast-mobile: 600px;
 
-  --radius-xs: calc(var(--radius) - 6px);
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 2px);
-  --radius-2xl: calc(var(--radius) + 4px);
-  --radius-3xl: calc(var(--radius) + 8px);
+  /* ALL CORNERS ARE SHARP */
+  --radius-xs: 0px;
+  --radius-sm: 0px;
+  --radius-md: 0px;
+  --radius-lg: 0px;
+  --radius-xl: 0px;
+  --radius-2xl: 0px;
+  --radius-3xl: 0px;
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -143,22 +216,33 @@
   --color-sidebar-ring: var(--sidebar-ring);
 }
 
-/*
-  The default border color has changed to `currentcolor` in Tailwind CSS v4,
-  so we've added these compatibility styles to make sure everything still
-  looks the same as it did with Tailwind CSS v3.
+/* Brutalist utility classes */
+@utility brutalist-shadow {
+  box-shadow: var(--brutalist-shadow);
+}
 
-  If we ever want to remove these styles, we need to add an explicit border
-  color utility to any element that depends on these defaults.
-*/
-@layer base {
-  *,
-  ::after,
-  ::before,
-  ::backdrop,
-  ::file-selector-button {
-    border-color: var(--color-gray-200, currentcolor);
-  }
+@utility brutalist-shadow-sm {
+  box-shadow: var(--brutalist-shadow-sm);
+}
+
+@utility brutalist-shadow-lg {
+  box-shadow: var(--brutalist-shadow-lg);
+}
+
+@utility brutalist-shadow-orange {
+  box-shadow: var(--brutalist-shadow-orange);
+}
+
+@utility brutalist-border {
+  border: 2px solid var(--border);
+}
+
+@utility brutalist-border-thick {
+  border: 3px solid var(--border);
+}
+
+@utility brutalist-border-orange {
+  border: 2px solid var(--brutalist-orange);
 }
 
 @utility text-balance {
@@ -177,18 +261,40 @@
   overscroll-behavior: contain;
 }
 
+@utility uppercase-brutal {
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+@utility font-display {
+  font-family: "Bebas Neue", "Impact", sans-serif;
+}
+
+/*
+  Tailwind CSS v4 compatibility
+*/
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentcolor);
+  }
+}
+
 @layer utilities {
   :root {
-    --foreground-rgb: 0, 0, 0;
-    --background-start-rgb: 214, 219, 220;
-    --background-end-rgb: 255, 255, 255;
+    --foreground-rgb: 10, 10, 10;
+    --background-start-rgb: 250, 250, 250;
+    --background-end-rgb: 250, 250, 250;
   }
 
   @media (prefers-color-scheme: dark) {
     :root {
-      --foreground-rgb: 255, 255, 255;
-      --background-start-rgb: 0, 0, 0;
-      --background-end-rgb: 0, 0, 0;
+      --foreground-rgb: 250, 250, 250;
+      --background-start-rgb: 10, 10, 10;
+      --background-end-rgb: 10, 10, 10;
     }
   }
 }
@@ -202,13 +308,27 @@
     @apply bg-background text-foreground;
     overflow-x: hidden;
     position: relative;
+    font-family: "JetBrains Mono", "Space Mono", ui-monospace, monospace;
   }
 
   html {
     overflow-x: hidden;
   }
+
+  /* Brutalist selection */
+  ::selection {
+    background-color: var(--brutalist-orange);
+    color: var(--brutalist-white);
+  }
+
+  /* Brutalist focus styles */
+  :focus-visible {
+    outline: 3px solid var(--brutalist-orange);
+    outline-offset: 2px;
+  }
 }
 
+/* Skeleton loading - brutalist style */
 .skeleton {
   * {
     pointer-events: none !important;
@@ -216,7 +336,8 @@
 
   *[class^="text-"] {
     color: transparent;
-    @apply rounded-md bg-foreground/20 select-none animate-pulse;
+    @apply bg-foreground/20 select-none animate-pulse;
+    border-radius: 0 !important;
   }
 
   .skeleton-bg {
@@ -232,15 +353,18 @@
   outline: none;
 }
 
+/* Code editor - brutalist style */
 .cm-editor,
 .cm-gutters {
-  @apply bg-background! dark:bg-zinc-800! outline-hidden! selection:bg-zinc-900!;
+  @apply bg-background! dark:bg-zinc-900! outline-hidden!;
+  border-radius: 0 !important;
 }
 
 .ͼo.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground,
 .ͼo.cm-selectionBackground,
 .ͼo.cm-content::selection {
-  @apply bg-zinc-200! dark:bg-zinc-900!;
+  background-color: var(--brutalist-orange) !important;
+  opacity: 0.3;
 }
 
 .cm-activeLine,
@@ -249,7 +373,7 @@
 }
 
 .cm-activeLine {
-  @apply rounded-r-sm!;
+  border-left: 3px solid var(--brutalist-orange);
 }
 
 .cm-lineNumbers {
@@ -261,41 +385,45 @@
 }
 
 .cm-lineNumbers .cm-activeLineGutter {
-  @apply rounded-l-sm!;
+  background-color: var(--brutalist-orange) !important;
+  color: var(--brutalist-white) !important;
 }
 
 .suggestion-highlight {
-  @apply bg-blue-200 hover:bg-blue-300 dark:hover:bg-blue-400/50 dark:text-blue-50 dark:bg-blue-500/40;
+  background-color: var(--brutalist-orange);
+  color: var(--brutalist-white);
+  padding: 0 2px;
 }
 
-/* minimal scrollbar styling */
+/* BRUTALIST SCROLLBAR - thick and visible */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 12px;
+  height: 12px;
 }
 
 ::-webkit-scrollbar-track {
-  background: transparent;
+  background: var(--muted);
+  border-left: 2px solid var(--border);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--border);
-  border-radius: 3px;
+  background: var(--brutalist-orange);
+  border: 2px solid var(--border);
   transition: background 0.2s ease;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: --alpha(var(--muted-foreground) / 0.5);
+  background: var(--brutalist-orange-dark);
 }
 
 ::-webkit-scrollbar-corner {
-  background: transparent;
+  background: var(--muted);
 }
 
-/* firefox scrollbar styling */
+/* Firefox scrollbar - brutalist */
 * {
-  scrollbar-width: thin;
-  scrollbar-color: var(--border) transparent;
+  scrollbar-width: thick;
+  scrollbar-color: var(--brutalist-orange) var(--muted);
 }
 
 @theme inline {
@@ -316,4 +444,163 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* ============================================
+   BRUTALIST COMPONENT OVERRIDES
+   ============================================ */
+
+/* Brutalist input fields - no borders on inputs themselves, only containers */
+input,
+textarea,
+select {
+  border-radius: 0 !important;
+  border: none !important;
+  font-family: "JetBrains Mono", monospace !important;
+  background: transparent !important;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  outline: none !important;
+}
+
+/* Brutalist buttons base override */
+button {
+  border-radius: 0 !important;
+  font-family: "JetBrains Mono", monospace !important;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+}
+
+/* Brutalist cards */
+.card,
+[class*="card"] {
+  border-radius: 0 !important;
+  border: 2px solid var(--border);
+}
+
+/* Brutalist dialogs/modals */
+[role="dialog"],
+[role="alertdialog"] {
+  border-radius: 0 !important;
+  border: 3px solid var(--border);
+  box-shadow: var(--brutalist-shadow-lg);
+}
+
+/* Brutalist tooltips */
+[role="tooltip"] {
+  border-radius: 0 !important;
+  border: 2px solid var(--border);
+  background: var(--brutalist-orange);
+  color: var(--brutalist-white);
+}
+
+/* Brutalist dropdowns */
+[role="menu"],
+[role="listbox"] {
+  border-radius: 0 !important;
+  border: 2px solid var(--border);
+  box-shadow: var(--brutalist-shadow);
+  background: var(--background) !important;
+}
+
+/* ============================================
+   DARK MODE OVERRIDES
+   In dark mode: black backgrounds, orange accents
+   ============================================ */
+
+/* Override border-foreground to use orange in dark mode */
+.dark .border-foreground {
+  border-color: var(--brutalist-orange) !important;
+}
+
+.dark .border-b-foreground {
+  border-bottom-color: var(--brutalist-orange) !important;
+}
+
+.dark .border-t-foreground {
+  border-top-color: var(--brutalist-orange) !important;
+}
+
+.dark .border-l-foreground {
+  border-left-color: var(--brutalist-orange) !important;
+}
+
+.dark .border-r-foreground {
+  border-right-color: var(--brutalist-orange) !important;
+}
+
+.dark .ring-foreground {
+  --tw-ring-color: var(--brutalist-orange) !important;
+}
+
+/* Dark mode: Primary elements get black bg with white text */
+.dark .bg-primary.text-primary-foreground {
+  background-color: var(--background) !important;
+  color: var(--foreground) !important;
+  border-color: var(--brutalist-orange) !important;
+}
+
+/* Dark mode: Dialog/Command cleanup - single outer border only */
+.dark [role="dialog"] {
+  border: 2px solid var(--brutalist-orange) !important;
+  box-shadow: var(--brutalist-shadow) !important;
+}
+
+.dark [role="dialog"] [cmdk-input-wrapper] {
+  border-color: var(--border-light) !important;
+}
+
+.dark [role="dialog"] [cmdk-root] {
+  border: none !important;
+}
+
+.dark [role="dialog"] [cmdk-list] {
+  border: none !important;
+}
+
+.dark [role="dialog"] [cmdk-group] {
+  border: none !important;
+}
+
+/* Animated orange glow for active elements */
+@keyframes brutal-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 var(--primary-glow);
+  }
+  50% {
+    box-shadow: 0 0 20px 5px var(--primary-glow);
+  }
+}
+
+.brutal-glow {
+  animation: brutal-pulse 2s ease-in-out infinite;
+}
+
+/* Brutalist striped background pattern */
+.brutal-stripes {
+  background: repeating-linear-gradient(
+    -45deg,
+    transparent,
+    transparent 10px,
+    var(--brutalist-orange) 10px,
+    var(--brutalist-orange) 11px
+  );
+}
+
+/* Raw noise texture overlay */
+.brutal-noise::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.03;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  pointer-events: none;
 }

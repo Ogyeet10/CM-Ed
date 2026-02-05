@@ -65,7 +65,7 @@ const PurePreviewMessage = ({
         })}
       >
         {message.role === "assistant" && (
-          <div className="-mt-1 flex size-8 shrink-0 items-center justify-center rounded-full bg-background ring-1 ring-border">
+          <div className="-mt-1 flex size-8 shrink-0 items-center justify-center bg-primary text-primary-foreground ring-2 ring-foreground shadow-[2px_2px_0px_var(--brutalist-accent)]">
             <SparklesIcon size={14} />
           </div>
         )}
@@ -128,17 +128,12 @@ const PurePreviewMessage = ({
                   <div key={key}>
                     <MessageContent
                       className={cn({
-                        "wrap-break-word w-fit rounded-2xl px-3 py-2 text-right text-white":
+                        "wrap-break-word w-fit px-4 py-3 text-right font-mono text-sm tracking-wide border-2 border-foreground bg-primary text-primary-foreground shadow-[4px_4px_0px_var(--brutalist-accent)]":
                           message.role === "user",
-                        "bg-transparent px-0 py-0 text-left":
+                        "bg-transparent px-0 py-0 text-left font-mono":
                           message.role === "assistant",
                       })}
                       data-testid="message-content"
-                      style={
-                        message.role === "user"
-                          ? { backgroundColor: "#006cff" }
-                          : undefined
-                      }
                     >
                       <Response>{sanitizeText(part.text)}</Response>
                     </MessageContent>
@@ -371,19 +366,25 @@ export const ThinkingMessage = () => {
       data-testid="message-assistant-loading"
     >
       <div className="flex items-start justify-start gap-3">
-        <div className="-mt-1 flex size-8 shrink-0 items-center justify-center rounded-full bg-background ring-1 ring-border">
+        <div className="-mt-1 flex size-8 shrink-0 items-center justify-center bg-primary text-primary-foreground ring-2 ring-foreground shadow-[2px_2px_0px_var(--brutalist-accent)]">
           <div className="animate-pulse">
             <SparklesIcon size={14} />
           </div>
         </div>
 
         <div className="flex w-full flex-col gap-2 md:gap-4">
-          <div className="flex items-center gap-1 p-0 text-muted-foreground text-sm">
-            <span className="animate-pulse">Thinking</span>
+          <div className="flex items-center gap-1 p-0 font-mono text-sm uppercase tracking-wider text-muted-foreground">
+            <span className="animate-pulse">PROCESSING</span>
             <span className="inline-flex">
-              <span className="animate-bounce [animation-delay:0ms]">.</span>
-              <span className="animate-bounce [animation-delay:150ms]">.</span>
-              <span className="animate-bounce [animation-delay:300ms]">.</span>
+              <span className="animate-bounce text-primary [animation-delay:0ms]">
+                _
+              </span>
+              <span className="animate-bounce text-primary [animation-delay:150ms]">
+                _
+              </span>
+              <span className="animate-bounce text-primary [animation-delay:300ms]">
+                _
+              </span>
             </span>
           </div>
         </div>
