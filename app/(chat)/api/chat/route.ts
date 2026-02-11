@@ -152,13 +152,7 @@ export async function POST(request: Request) {
                 "updateDocument",
                 "requestSuggestions",
               ],
-          providerOptions: isReasoningModel
-            ? {
-                anthropic: {
-                  thinking: { type: "enabled", budgetTokens: 10_000 },
-                },
-              }
-            : undefined,
+          providerOptions: undefined,
           tools: {
             getWeather,
             createDocument: createDocument({ session, dataStream }),
