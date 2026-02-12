@@ -22,6 +22,8 @@ import { MessageEditor } from "./message-editor";
 import { MessageReasoning } from "./message-reasoning";
 import { PreviewAttachment } from "./preview-attachment";
 import { Weather } from "./weather";
+import type { WebSearchOutput } from "./web-search";
+import { WebSearchLoading, WebSearchResults } from "./web-search";
 
 const PurePreviewMessage = ({
   addToolApprovalResponse,
@@ -252,6 +254,28 @@ const PurePreviewMessage = ({
                       )}
                     </ToolContent>
                   </Tool>
+                </div>
+              );
+            }
+
+            if (type === "tool-webSearch") {
+              const { toolCallId, state } = part;
+              const widthClass = "w-full";
+
+              if (state === "output-available") {
+                return (
+                  <div className={widthClass} key={toolCallId}>
+                    <WebSearchResults
+                      output={part.output as WebSearchOutput}
+                      query={part.input.query}
+                    />
+                  </div>
+                );
+              }
+
+              return (
+                <div className={widthClass} key={toolCallId}>
+                  <WebSearchLoading query={part.input?.query} />
                 </div>
               );
             }

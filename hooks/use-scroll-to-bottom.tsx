@@ -55,9 +55,24 @@ export function useScrollToBottom() {
       }, 150);
     };
 
+    // Components can dispatch this event to signal a user-initiated resize
+    // (e.g. expanding/collapsing a panel) that should NOT trigger auto-scroll.
+    const handleScrollAnchorRelease = () => {
+      isAtBottomRef.current = false;
+      setIsAtBottom(false);
+    };
+
     container.addEventListener("scroll", handleScroll, { passive: true });
+    document.addEventListener(
+      "scroll-anchor-release",
+      handleScrollAnchorRelease
+    );
     return () => {
       container.removeEventListener("scroll", handleScroll);
+      document.removeEventListener(
+        "scroll-anchor-release",
+        handleScrollAnchorRelease
+      );
       clearTimeout(scrollTimeout);
     };
   }, [checkIfAtBottom]);
@@ -83,7 +98,16 @@ export function useScrollToBottom() {
       }
     };
 
-    // Watch for DOM changes
+    // Debounced version for resize events — prevents frame-by-frame
+    // scroll fighting during CSS/framer-motion height animations.
+    // MutationObserver (streaming text) stays immediate.
+    let resizeTimer: ReturnType<typeof setTimeout>;
+    const debouncedScrollIfNeeded = () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(scrollIfNeeded, 150);
+    };
+
+    // Watch for DOM changes (streaming text, new elements)
     const mutationObserver = new MutationObserver(scrollIfNeeded);
     mutationObserver.observe(container, {
       childList: true,
@@ -91,8 +115,8 @@ export function useScrollToBottom() {
       characterData: true,
     });
 
-    // Watch for size changes
-    const resizeObserver = new ResizeObserver(scrollIfNeeded);
+    // Watch for size changes (debounced to avoid animation jitter)
+    const resizeObserver = new ResizeObserver(debouncedScrollIfNeeded);
     resizeObserver.observe(container);
 
     // Also observe children for size changes
@@ -103,6 +127,7 @@ export function useScrollToBottom() {
     return () => {
       mutationObserver.disconnect();
       resizeObserver.disconnect();
+      clearTimeout(resizeTimer);
     };
   }, []);
 

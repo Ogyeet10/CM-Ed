@@ -24,7 +24,7 @@ function PureChatHeader({
   const { width: windowWidth } = useWindowSize();
 
   return (
-    <header className="sticky top-0 z-10 flex items-center gap-2 border-b-2 border-foreground bg-background px-2 py-2 md:px-3">
+    <header className="absolute top-0 right-0 left-0 z-20 flex items-center gap-2 border-b-2 border-foreground bg-background/30 px-2 py-2 backdrop-blur-md supports-[backdrop-filter]:bg-background/20 md:px-3">
       <SidebarToggle />
 
       {(!open || windowWidth < 768) && (
