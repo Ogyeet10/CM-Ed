@@ -4,6 +4,7 @@ import {
   createUIMessageStream,
   createUIMessageStreamResponse,
   generateId,
+  smoothStream,
   stepCountIs,
   streamText,
 } from "ai";
@@ -162,6 +163,7 @@ export async function POST(request: Request) {
             requestSuggestions: requestSuggestions({ session, dataStream }),
             webSearch,
           },
+          experimental_transform: smoothStream({ chunking: "word" }),
           experimental_telemetry: {
             isEnabled: isProductionEnvironment,
             functionId: "stream-text",
