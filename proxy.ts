@@ -17,14 +17,18 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
+  const isSecure = request.url.startsWith("https://");
+
   const token = await getToken({
     req: request,
     secret: process.env.AUTH_SECRET,
-    secureCookie: !isDevelopmentEnvironment,
+    secureCookie: !isDevelopmentEnvironment || isSecure,
   });
 
   if (!token) {
-    const redirectUrl = encodeURIComponent(request.url);
+    const redirectUrl = encodeURIComponent(
+      request.nextUrl.pathname + request.nextUrl.search
+    );
 
     return NextResponse.redirect(
       new URL(`/api/auth/guest?redirectUrl=${redirectUrl}`, request.url)
