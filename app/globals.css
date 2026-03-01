@@ -353,6 +353,10 @@
   outline: none;
 }
 
+.ProseMirror > :first-child {
+  margin-top: 0;
+}
+
 /* Code editor - brutalist style */
 .cm-editor,
 .cm-gutters {

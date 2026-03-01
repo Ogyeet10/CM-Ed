@@ -59,7 +59,7 @@ export function DocumentPreview({
   }, [artifact.documentId, setArtifact]);
 
   if (artifact.isVisible) {
-    if (result) {
+    if (result && artifact.documentId !== result.id) {
       return (
         <DocumentToolResult
           isReadonly={isReadonly}
@@ -69,7 +69,7 @@ export function DocumentPreview({
       );
     }
 
-    if (args) {
+    if (args && artifact.documentId === "init") {
       return (
         <DocumentToolCall
           args={{ title: args.title, kind: args.kind }}
@@ -104,6 +104,7 @@ export function DocumentPreview({
   return (
     <div className="relative w-full max-w-[450px] cursor-pointer">
       <HitboxLayer
+        document={document}
         hitboxRef={hitboxRef}
         result={result}
         setArtifact={setArtifact}
@@ -144,10 +145,12 @@ const LoadingSkeleton = ({ artifactKind }: { artifactKind: ArtifactKind }) => (
 );
 
 const PureHitboxLayer = ({
+  document,
   hitboxRef,
   result,
   setArtifact,
 }: {
+  document: Document;
   hitboxRef: React.RefObject<HTMLDivElement>;
   result: any;
   setArtifact: (
@@ -166,6 +169,7 @@ const PureHitboxLayer = ({
               title: result.title,
               documentId: result.id,
               kind: result.kind,
+              content: document.content ?? "",
               isVisible: true,
               boundingBox: {
                 left: boundingBox.x,
@@ -176,7 +180,7 @@ const PureHitboxLayer = ({
             }
       );
     },
-    [setArtifact, result]
+    [document.content, result, setArtifact]
   );
 
   return (
@@ -248,7 +252,7 @@ const DocumentContent = ({ document }: { document: Document }) => {
   const containerClassName = cn(
     "h-[257px] overflow-y-scroll rounded-b-2xl border border-t-0 dark:border-zinc-700 dark:bg-muted",
     {
-      "p-4 sm:px-14 sm:py-16": document.kind === "text",
+      "px-4 pb-6 pt-2 sm:px-14 sm:pb-12 sm:pt-6": document.kind === "text",
       "p-0": document.kind === "code",
     }
   );

@@ -32,7 +32,7 @@ export const textArtifact = new Artifact<"text", TextArtifactMetadata>({
     if (streamPart.type === "data-suggestion") {
       setMetadata((metadata) => {
         return {
-          suggestions: [...metadata.suggestions, streamPart.data],
+          suggestions: [...(metadata?.suggestions ?? []), streamPart.data],
         };
       });
     }
@@ -76,7 +76,7 @@ export const textArtifact = new Artifact<"text", TextArtifactMetadata>({
     }
 
     return (
-      <div className="flex flex-row px-4 py-8 md:p-20">
+      <div className="flex flex-row px-4 pb-8 pt-2 md:px-20 md:pb-20 md:pt-6">
         <Editor
           content={content}
           currentVersionIndex={currentVersionIndex}

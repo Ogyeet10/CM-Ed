@@ -21,6 +21,7 @@ export function DataStreamHandler() {
 
     const newDeltas = dataStream.slice();
     setDataStream([]);
+    let currentArtifactKind = artifact.kind;
 
     for (const delta of newDeltas) {
       // Handle chat title updates
@@ -28,9 +29,14 @@ export function DataStreamHandler() {
         mutate(unstable_serialize(getChatHistoryPaginationKey));
         continue;
       }
+
+      if (delta.type === "data-kind") {
+        currentArtifactKind = delta.data;
+      }
+
       const artifactDefinition = artifactDefinitions.find(
         (currentArtifactDefinition) =>
-          currentArtifactDefinition.kind === artifact.kind
+          currentArtifactDefinition.kind === currentArtifactKind
       );
 
       if (artifactDefinition?.onStreamPart) {
