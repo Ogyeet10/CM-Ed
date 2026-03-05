@@ -15,7 +15,7 @@ export async function GET(request: Request) {
     secureCookie: !isDevelopmentEnvironment || isSecure,
   });
 
-  if (token) {
+  if (token?.id) {
     return NextResponse.redirect(new URL("/", request.url));
   }
 

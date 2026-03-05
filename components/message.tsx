@@ -1,11 +1,11 @@
 "use client";
 import type { UseChatHelpers } from "@ai-sdk/react";
 import { useState } from "react";
-import type { Vote } from "@/lib/db/schema";
 import type { ChatMessage } from "@/lib/types";
+import type { Vote } from "@/lib/types/convex";
 import { cn, sanitizeText } from "@/lib/utils";
 import { useDataStream } from "./data-stream-provider";
-import { DocumentToolResult } from "./document";
+import { DocumentToolCall, DocumentToolResult } from "./document";
 import { DocumentPreview } from "./document-preview";
 import { MessageContent } from "./elements/message";
 import { Response } from "./elements/response";
@@ -16,7 +16,7 @@ import {
   ToolInput,
   ToolOutput,
 } from "./elements/tool";
-import { SparklesIcon } from "./icons";
+import { LineChartIcon, SparklesIcon } from "./icons";
 import { MessageActions } from "./message-actions";
 import { MessageEditor } from "./message-editor";
 import { MessageReasoning } from "./message-reasoning";
@@ -299,6 +299,53 @@ const PurePreviewMessage = ({
                   isReadonly={isReadonly}
                   key={toolCallId}
                   result={part.output}
+                />
+              );
+            }
+
+            if (type === "tool-createMacroChart") {
+              const { toolCallId, state } = part;
+
+              if (state === "output-available") {
+                if (part.output && "error" in part.output) {
+                  return (
+                    <div
+                      className="rounded-lg border border-red-200 bg-red-50 p-4 text-red-500 dark:bg-red-950/50"
+                      key={toolCallId}
+                    >
+                      Error creating chart: {String(part.output.error)}
+                    </div>
+                  );
+                }
+
+                return (
+                  <DocumentToolResult
+                    autoOpen={isLoading}
+                    customIcon={<LineChartIcon size={16} />}
+                    customLabel={`Macro chart ready: "${part.output.title}"`}
+                    isReadonly={isReadonly}
+                    key={toolCallId}
+                    result={{
+                      id: part.output.id,
+                      title: part.output.title,
+                      kind: "chart",
+                    }}
+                    type="create"
+                  />
+                );
+              }
+
+              return (
+                <DocumentToolCall
+                  args={{
+                    title: part.input?.title ?? "Macro chart",
+                    kind: "chart",
+                  }}
+                  customIcon={<LineChartIcon size={16} />}
+                  customLabel={`Building macro chart: "${part.input?.title ?? "Macro chart"}"`}
+                  isReadonly={isReadonly}
+                  key={toolCallId}
+                  type="create"
                 />
               );
             }

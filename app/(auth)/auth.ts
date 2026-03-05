@@ -2,8 +2,11 @@ import { compare } from "bcrypt-ts";
 import NextAuth, { type DefaultSession } from "next-auth";
 import type { DefaultJWT } from "next-auth/jwt";
 import Credentials from "next-auth/providers/credentials";
+import { api } from "@/convex/_generated/api";
+import { generateHashedPassword } from "@/lib/auth-utils";
 import { DUMMY_PASSWORD } from "@/lib/constants";
-import { createGuestUser, getUser } from "@/lib/db/queries";
+import { fetchMutation, fetchQuery, getServerSecret } from "@/lib/convex";
+import { generateUUID } from "@/lib/utils";
 import { authConfig } from "./auth.config";
 
 export type UserType = "guest" | "regular";
@@ -41,7 +44,11 @@ export const {
     Credentials({
       credentials: {},
       async authorize({ email, password }: any) {
-        const users = await getUser(email);
+        const serverSecret = getServerSecret();
+        const users = await fetchQuery(api.users.getByEmail, {
+          email,
+          serverSecret,
+        });
 
         if (users.length === 0) {
           await compare(password, DUMMY_PASSWORD);
@@ -61,15 +68,25 @@ export const {
           return null;
         }
 
-        return { ...user, type: "regular" };
+        return { id: user._id, email: user.email, type: "regular" };
       },
     }),
     Credentials({
       id: "guest",
       credentials: {},
       async authorize() {
-        const [guestUser] = await createGuestUser();
-        return { ...guestUser, type: "guest" };
+        const serverSecret = getServerSecret();
+        const email = `guest-${Date.now()}`;
+        const password = generateHashedPassword(generateUUID());
+
+        const guestUser = await fetchMutation(api.users.createGuest, {
+          email,
+          password,
+          serverSecret,
+        });
+
+        // biome-ignore lint: Forbidden non-null assertion.
+        return { id: guestUser!._id, email: guestUser!.email, type: "guest" };
       },
     }),
   ],
@@ -78,6 +95,13 @@ export const {
       if (user) {
         token.id = user.id as string;
         token.type = user.type;
+      }
+
+      // Invalidate old pre-Convex sessions that have UUID-format IDs.
+      // Convex IDs never contain dashes; UUIDs always do.
+      if (token.id?.includes("-")) {
+        token.id = "";
+        token.type = undefined as unknown as UserType;
       }
 
       return token;

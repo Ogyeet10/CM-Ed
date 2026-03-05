@@ -7,7 +7,8 @@ import type {
 import { type ClassValue, clsx } from 'clsx';
 import { formatISO } from 'date-fns';
 import { twMerge } from 'tailwind-merge';
-import type { DBMessage, Document } from '@/lib/db/schema';
+import type { Doc } from '@/convex/_generated/dataModel';
+import type { Document } from '@/lib/types/convex';
 import { ChatSDKError, type ErrorCode } from './errors';
 import type { ChatMessage, ChatTools, CustomUIDataTypes } from './types';
 
@@ -97,13 +98,13 @@ export function sanitizeText(text: string) {
   return text.replace('<has_function_call>', '');
 }
 
-export function convertToUIMessages(messages: DBMessage[]): ChatMessage[] {
+export function convertToUIMessages(messages: Doc<"messages">[]): ChatMessage[] {
   return messages.map((message) => ({
-    id: message.id,
+    id: message.externalId,
     role: message.role as 'user' | 'assistant' | 'system',
     parts: message.parts as UIMessagePart<CustomUIDataTypes, ChatTools>[],
     metadata: {
-      createdAt: formatISO(message.createdAt),
+      createdAt: formatISO(new Date(message._creationTime)),
     },
   }));
 }

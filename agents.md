@@ -1,0 +1,1 @@
+- Only use subagents when they seem particularly useful to the situation at hand, not when initially exploring the codebase. Prefer using Read, Glob, and Grep directly for initial exploration.

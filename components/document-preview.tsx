@@ -1,5 +1,6 @@
 "use client";
 
+import { useQuery } from "convex/react";
 import equal from "fast-deep-equal";
 import {
   type MouseEvent,
@@ -9,11 +10,18 @@ import {
   useMemo,
   useRef,
 } from "react";
-import useSWR from "swr";
+import { api } from "@/convex/_generated/api";
 import { useArtifact } from "@/hooks/use-artifact";
-import type { Document } from "@/lib/db/schema";
-import { cn, fetcher } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import type { ArtifactKind, UIArtifact } from "./artifact";
+
+// Lightweight type for document preview rendering (doesn't require Convex system fields)
+type PreviewDocument = {
+  title: string;
+  kind: ArtifactKind;
+  content?: string | null;
+};
+
 import { CodeEditor } from "./code-editor";
 import { DocumentToolCall, DocumentToolResult } from "./document";
 import { InlineDocumentSkeleton } from "./document-skeleton";
@@ -35,9 +43,11 @@ export function DocumentPreview({
 }: DocumentPreviewProps) {
   const { artifact, setArtifact } = useArtifact();
 
-  const { data: documents, isLoading: isDocumentsFetching } = useSWR<
-    Document[]
-  >(result ? `/api/document?id=${result.id}` : null, fetcher);
+  const documents = useQuery(
+    api.documents.getByDocumentIdPublic,
+    result ? { documentId: result.id } : "skip"
+  );
+  const isDocumentsFetching = documents === undefined && result != null;
 
   const previewDocument = useMemo(() => documents?.[0], [documents]);
   const hitboxRef = useRef<HTMLDivElement>(null);
@@ -84,16 +94,13 @@ export function DocumentPreview({
     return <LoadingSkeleton artifactKind={result.kind ?? args.kind} />;
   }
 
-  const document: Document | null = previewDocument
+  const document: PreviewDocument | null = previewDocument
     ? previewDocument
     : artifact.status === "streaming"
       ? {
           title: artifact.title,
           kind: artifact.kind,
           content: artifact.content,
-          id: artifact.documentId,
-          createdAt: new Date(),
-          userId: "noop",
         }
       : null;
 
@@ -150,7 +157,7 @@ const PureHitboxLayer = ({
   result,
   setArtifact,
 }: {
-  document: Document;
+  document: PreviewDocument;
   hitboxRef: React.RefObject<HTMLDivElement>;
   result: any;
   setArtifact: (
@@ -246,7 +253,7 @@ const DocumentHeader = memo(PureDocumentHeader, (prevProps, nextProps) => {
   return true;
 });
 
-const DocumentContent = ({ document }: { document: Document }) => {
+const DocumentContent = ({ document }: { document: PreviewDocument }) => {
   const { artifact } = useArtifact();
 
   const containerClassName = cn(

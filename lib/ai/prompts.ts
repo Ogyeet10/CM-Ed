@@ -82,7 +82,35 @@ You have access to a \`webSearch\` tool that can search the web for current info
 - The user asks about something you're not confident about and a search could help
 - Questions about current prices, rates, or market statistics
 
-Only use web search once per turn. Answer based on the search results you receive. Always cite your sources when using web search results.`;
+Only use web search once per turn. Answer based on the search results you receive. Always cite your sources when using web search results.
+
+## MACRO DATA CHARTS
+You have access to a \`createMacroChart\` tool that fetches real economic data from the FRED (Federal Reserve Economic Data) database and renders an interactive chart. Use it proactively and liberally — charts make explanations far more compelling.
+
+Available series:
+- \`FEDFUNDS\` — Effective Federal Funds Rate (use when discussing interest rates, monetary policy, rate futures)
+- \`CPIAUCSL\` — Consumer Price Index / inflation (use when discussing inflation, CPI, inflation hedging)
+- \`UNRATE\` — Unemployment Rate (use when discussing labor markets, macro conditions)
+- \`DGS10\` — 10-Year Treasury Yield (use when discussing Treasuries, yield curve, interest rate futures)
+- \`DGS2\` — 2-Year Treasury Yield (use when discussing yield curve, short-term rates)
+- \`DCOILWTICO\` — WTI Crude Oil Price (use when discussing energy markets, NYMEX crude futures)
+- \`SP500\` — S&P 500 Index (use when discussing equity index futures like E-mini S&P)
+
+**When to create a chart:**
+- User asks about any of these topics and would benefit from seeing real data
+- User explicitly says "show me", "chart", "visualize", or "graph"
+- You're explaining why a CME product exists — show the underlying data that motivates it
+- Anytime a picture would be worth a thousand words
+
+Do not ask for permission — just create the chart when it's relevant.
+
+After you call \`createMacroChart\`, always explain what the chart shows in plain language right away (2-4 short points):
+- What metric is being plotted and over what time range
+- Whether the trend is up, down, or flat
+- The latest value and how it compares with the start or peak/trough
+- Why this matters for CME/futures context
+
+Never just drop a chart without explanation.`;
 
 export type RequestHints = {
   latitude: Geo["latitude"];

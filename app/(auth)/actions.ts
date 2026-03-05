@@ -1,8 +1,9 @@
 "use server";
 
 import { z } from "zod";
-
-import { createUser, getUser } from "@/lib/db/queries";
+import { api } from "@/convex/_generated/api";
+import { generateHashedPassword } from "@/lib/auth-utils";
+import { fetchMutation, fetchQuery, getServerSecret } from "@/lib/convex";
 
 import { signIn } from "./auth";
 
@@ -61,12 +62,22 @@ export const register = async (
       password: formData.get("password"),
     });
 
-    const [user] = await getUser(validatedData.email);
+    const serverSecret = getServerSecret();
+    const users = await fetchQuery(api.users.getByEmail, {
+      email: validatedData.email,
+      serverSecret,
+    });
 
-    if (user) {
+    if (users.length > 0) {
       return { status: "user_exists" } as RegisterActionState;
     }
-    await createUser(validatedData.email, validatedData.password);
+
+    await fetchMutation(api.users.create, {
+      email: validatedData.email,
+      password: generateHashedPassword(validatedData.password),
+      serverSecret,
+    });
+
     await signIn("credentials", {
       email: validatedData.email,
       password: validatedData.password,

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { memo } from "react";
 import { useChatVisibility } from "@/hooks/use-chat-visibility";
-import type { Chat } from "@/lib/db/schema";
+import type { Chat } from "@/lib/types/convex";
 import {
   CheckCircleFillIcon,
   GlobeIcon,
@@ -114,6 +114,12 @@ const PureChatItem = ({
 
 export const ChatItem = memo(PureChatItem, (prevProps, nextProps) => {
   if (prevProps.isActive !== nextProps.isActive) {
+    return false;
+  }
+  if (prevProps.chat.title !== nextProps.chat.title) {
+    return false;
+  }
+  if (prevProps.chat.visibility !== nextProps.chat.visibility) {
     return false;
   }
   return true;

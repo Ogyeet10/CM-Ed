@@ -1,9 +1,11 @@
 import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 import Script from "next/script";
 import { Suspense } from "react";
 import { AppSidebar } from "@/components/app-sidebar";
 import { DataStreamProvider } from "@/components/data-stream-provider";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
+import { UserProvider } from "@/components/user-provider";
 import { auth } from "../(auth)/auth";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
@@ -24,12 +26,22 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
 async function SidebarWrapper({ children }: { children: React.ReactNode }) {
   const [session, cookieStore] = await Promise.all([auth(), cookies()]);
+
+  // Force re-auth if session was invalidated (old pre-Convex UUID session)
+  if (session && !session.user?.id) {
+    redirect("/api/auth/guest");
+  }
+
   const isCollapsed = cookieStore.get("sidebar_state")?.value === "false";
 
   return (
     <SidebarProvider defaultOpen={!isCollapsed}>
       <AppSidebar user={session?.user} />
-      <SidebarInset>{children}</SidebarInset>
+      <SidebarInset>
+        <UserProvider userId={session?.user?.id ?? null}>
+          {children}
+        </UserProvider>
+      </SidebarInset>
     </SidebarProvider>
   );
 }

@@ -5,8 +5,6 @@ import { inputRules } from "prosemirror-inputrules";
 import { EditorState } from "prosemirror-state";
 import { EditorView } from "prosemirror-view";
 import { memo, useEffect, useRef } from "react";
-
-import type { Suggestion } from "@/lib/db/schema";
 import {
   documentSchema,
   handleTransaction,
@@ -22,6 +20,7 @@ import {
   suggestionsPlugin,
   suggestionsPluginKey,
 } from "@/lib/editor/suggestions";
+import type { Suggestion } from "@/lib/types/convex";
 
 type EditorProps = {
   content: string;
@@ -146,7 +145,10 @@ function PureEditor({
   }, [suggestions, content]);
 
   return (
-    <div className="prose dark:prose-invert relative" ref={containerRef} />
+    <div
+      className="prose dark:prose-invert prose-full relative max-w-full"
+      ref={containerRef}
+    />
   );
 }
 

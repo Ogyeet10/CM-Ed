@@ -50,7 +50,7 @@ export const sheetDocumentHandler = createDocumentHandler<"sheet">({
 
     const { fullStream } = streamObject({
       model: getArtifactModel(),
-      system: updateDocumentPrompt(document.content, "sheet"),
+      system: updateDocumentPrompt(document.content ?? null, "sheet"),
       prompt: description,
       schema: z.object({
         csv: z.string(),

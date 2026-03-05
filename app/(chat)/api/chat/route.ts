@@ -11,27 +11,19 @@ import {
 import { after } from "next/server";
 import { createResumableStreamContext } from "resumable-stream";
 import { auth, type UserType } from "@/app/(auth)/auth";
+import { api } from "@/convex/_generated/api";
+import type { Id } from "@/convex/_generated/dataModel";
 import { entitlementsByUserType } from "@/lib/ai/entitlements";
 import { type RequestHints, systemPrompt } from "@/lib/ai/prompts";
 import { getLanguageModel } from "@/lib/ai/providers";
 import { createDocument } from "@/lib/ai/tools/create-document";
+import { createMacroChart } from "@/lib/ai/tools/create-macro-chart";
 import { getWeather } from "@/lib/ai/tools/get-weather";
 import { requestSuggestions } from "@/lib/ai/tools/request-suggestions";
 import { updateDocument } from "@/lib/ai/tools/update-document";
 import { webSearch } from "@/lib/ai/tools/web-search";
 import { isProductionEnvironment } from "@/lib/constants";
-import {
-  createStreamId,
-  deleteChatById,
-  getChatById,
-  getMessageCountByUserId,
-  getMessagesByChatId,
-  saveChat,
-  saveMessages,
-  updateChatTitleById,
-  updateMessage,
-} from "@/lib/db/queries";
-import type { DBMessage } from "@/lib/db/schema";
+import { fetchMutation, fetchQuery, getServerSecret } from "@/lib/convex";
 import { ChatSDKError } from "@/lib/errors";
 import type { ChatMessage } from "@/lib/types";
 import { convertToUIMessages, generateUUID } from "@/lib/utils";
@@ -70,11 +62,14 @@ export async function POST(request: Request) {
       return new ChatSDKError("unauthorized:chat").toResponse();
     }
 
+    const serverSecret = getServerSecret();
+    const userId = session.user.id as Id<"users">;
     const userType: UserType = session.user.type;
 
-    const messageCount = await getMessageCountByUserId({
-      id: session.user.id,
-      differenceInHours: 24,
+    const messageCount = await fetchQuery(api.messages.countByUser, {
+      userId,
+      sinceTimestamp: Date.now() - 24 * 60 * 60 * 1000,
+      serverSecret,
     });
 
     if (messageCount > entitlementsByUserType[userType].maxMessagesPerDay) {
@@ -83,23 +78,35 @@ export async function POST(request: Request) {
 
     const isToolApprovalFlow = Boolean(messages);
 
-    const chat = await getChatById({ id });
-    let messagesFromDb: DBMessage[] = [];
+    const chat = await fetchQuery(api.chats.getByExternalId, {
+      externalId: id,
+      serverSecret,
+    });
+
+    // We need the Convex _id for the chat to save messages
+    let chatConvexId: Id<"chats"> | null = chat?._id ?? null;
+    let messagesFromDb: Awaited<
+      ReturnType<typeof fetchQuery<typeof api.messages.getByChatId>>
+    > = [];
     let titlePromise: Promise<string> | null = null;
 
     if (chat) {
-      if (chat.userId !== session.user.id) {
+      if (chat.userId !== userId) {
         return new ChatSDKError("forbidden:chat").toResponse();
       }
       if (!isToolApprovalFlow) {
-        messagesFromDb = await getMessagesByChatId({ id });
+        messagesFromDb = await fetchQuery(api.messages.getByChatId, {
+          chatId: chat._id,
+          serverSecret,
+        });
       }
     } else if (message?.role === "user") {
-      await saveChat({
-        id,
-        userId: session.user.id,
+      chatConvexId = await fetchMutation(api.chats.save, {
+        externalId: id,
+        userId,
         title: "New chat",
         visibility: selectedVisibilityType,
+        serverSecret,
       });
       titlePromise = generateTitleFromUserMessage({ message });
     }
@@ -117,18 +124,18 @@ export async function POST(request: Request) {
       country,
     };
 
-    if (message?.role === "user") {
-      await saveMessages({
+    if (message?.role === "user" && chatConvexId) {
+      await fetchMutation(api.messages.save, {
         messages: [
           {
-            chatId: id,
-            id: message.id,
+            externalId: message.id,
+            chatId: chatConvexId,
             role: "user",
             parts: message.parts,
             attachments: [],
-            createdAt: new Date(),
           },
         ],
+        serverSecret,
       });
     }
 
@@ -154,6 +161,7 @@ export async function POST(request: Request) {
                 "updateDocument",
                 "requestSuggestions",
                 "webSearch",
+                "createMacroChart",
               ],
           providerOptions: undefined,
           tools: {
@@ -162,6 +170,7 @@ export async function POST(request: Request) {
             updateDocument: updateDocument({ session, dataStream }),
             requestSuggestions: requestSuggestions({ session, dataStream }),
             webSearch,
+            createMacroChart: createMacroChart({ session, dataStream }),
           },
           experimental_transform: smoothStream({ chunking: "word" }),
           experimental_telemetry: {
@@ -172,47 +181,63 @@ export async function POST(request: Request) {
 
         dataStream.merge(result.toUIMessageStream({ sendReasoning: true }));
 
-        if (titlePromise) {
+        if (titlePromise && chatConvexId) {
           const title = await titlePromise;
           dataStream.write({ type: "data-chat-title", data: title });
-          updateChatTitleById({ chatId: id, title });
+          await fetchMutation(api.chats.updateTitle, {
+            id: chatConvexId,
+            title,
+            serverSecret,
+          });
         }
       },
       generateId: generateUUID,
       onFinish: async ({ messages: finishedMessages }) => {
+        if (!chatConvexId) {
+          return;
+        }
+
         if (isToolApprovalFlow) {
           for (const finishedMsg of finishedMessages) {
             const existingMsg = uiMessages.find((m) => m.id === finishedMsg.id);
             if (existingMsg) {
-              await updateMessage({
-                id: finishedMsg.id,
-                parts: finishedMsg.parts,
+              // Look up the existing message by externalId to get Convex _id
+              const dbMsg = await fetchQuery(api.messages.getByExternalId, {
+                externalId: finishedMsg.id,
+                serverSecret,
               });
+              if (dbMsg) {
+                await fetchMutation(api.messages.update, {
+                  id: dbMsg._id,
+                  parts: finishedMsg.parts,
+                  serverSecret,
+                });
+              }
             } else {
-              await saveMessages({
+              await fetchMutation(api.messages.save, {
                 messages: [
                   {
-                    id: finishedMsg.id,
+                    externalId: finishedMsg.id,
+                    chatId: chatConvexId,
                     role: finishedMsg.role,
                     parts: finishedMsg.parts,
-                    createdAt: new Date(),
                     attachments: [],
-                    chatId: id,
                   },
                 ],
+                serverSecret,
               });
             }
           }
         } else if (finishedMessages.length > 0) {
-          await saveMessages({
+          await fetchMutation(api.messages.save, {
             messages: finishedMessages.map((currentMessage) => ({
-              id: currentMessage.id,
+              externalId: currentMessage.id,
+              chatId: chatConvexId as Id<"chats">,
               role: currentMessage.role,
               parts: currentMessage.parts,
-              createdAt: new Date(),
               attachments: [],
-              chatId: id,
             })),
+            serverSecret,
           });
         }
       },
@@ -227,9 +252,12 @@ export async function POST(request: Request) {
         }
         try {
           const streamContext = getStreamContext();
-          if (streamContext) {
+          if (streamContext && chatConvexId) {
             const streamId = generateId();
-            await createStreamId({ streamId, chatId: id });
+            await fetchMutation(api.streams.create, {
+              chatId: chatConvexId,
+              serverSecret,
+            });
             await streamContext.createNewResumableStream(
               streamId,
               () => sseStream
@@ -275,13 +303,20 @@ export async function DELETE(request: Request) {
     return new ChatSDKError("unauthorized:chat").toResponse();
   }
 
-  const chat = await getChatById({ id });
+  const serverSecret = getServerSecret();
+  const chat = await fetchQuery(api.chats.getByExternalId, {
+    externalId: id,
+    serverSecret,
+  });
 
-  if (chat?.userId !== session.user.id) {
+  if (chat?.userId !== (session.user.id as Id<"users">)) {
     return new ChatSDKError("forbidden:chat").toResponse();
   }
 
-  const deletedChat = await deleteChatById({ id });
+  const deletedChat = await fetchMutation(api.chats.deleteById, {
+    id: chat._id,
+    serverSecret,
+  });
 
   return Response.json(deletedChat, { status: 200 });
 }

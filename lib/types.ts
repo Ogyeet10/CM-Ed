@@ -2,11 +2,12 @@ import type { InferUITool, UIMessage } from "ai";
 import { z } from "zod";
 import type { ArtifactKind } from "@/components/artifact";
 import type { createDocument } from "./ai/tools/create-document";
+import type { createMacroChart } from "./ai/tools/create-macro-chart";
 import type { getWeather } from "./ai/tools/get-weather";
 import type { requestSuggestions } from "./ai/tools/request-suggestions";
 import type { updateDocument } from "./ai/tools/update-document";
 import type { webSearch } from "./ai/tools/web-search";
-import type { Suggestion } from "./db/schema";
+import type { Suggestion } from "./types/convex";
 
 export type DataPart = { type: "append-message"; message: string };
 
@@ -23,6 +24,7 @@ type requestSuggestionsTool = InferUITool<
   ReturnType<typeof requestSuggestions>
 >;
 type webSearchTool = InferUITool<typeof webSearch>;
+type createMacroChartTool = InferUITool<ReturnType<typeof createMacroChart>>;
 
 export type ChatTools = {
   getWeather: weatherTool;
@@ -30,6 +32,7 @@ export type ChatTools = {
   updateDocument: updateDocumentTool;
   requestSuggestions: requestSuggestionsTool;
   webSearch: webSearchTool;
+  createMacroChart: createMacroChartTool;
 };
 
 export type CustomUIDataTypes = {
@@ -37,6 +40,7 @@ export type CustomUIDataTypes = {
   imageDelta: string;
   sheetDelta: string;
   codeDelta: string;
+  chartDelta: string;
   suggestion: Suggestion;
   appendMessage: string;
   id: string;

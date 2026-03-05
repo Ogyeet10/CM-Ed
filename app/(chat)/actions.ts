@@ -3,13 +3,10 @@
 import { generateText, type UIMessage } from "ai";
 import { cookies } from "next/headers";
 import type { VisibilityType } from "@/components/visibility-selector";
+import { api } from "@/convex/_generated/api";
 import { titlePrompt } from "@/lib/ai/prompts";
 import { getTitleModel } from "@/lib/ai/providers";
-import {
-  deleteMessagesByChatIdAfterTimestamp,
-  getMessageById,
-  updateChatVisibilityById,
-} from "@/lib/db/queries";
+import { fetchMutation, fetchQuery, getServerSecret } from "@/lib/convex";
 import { getTextFromMessage } from "@/lib/utils";
 
 export async function saveChatModelAsCookie(model: string) {
@@ -34,11 +31,20 @@ export async function generateTitleFromUserMessage({
 }
 
 export async function deleteTrailingMessages({ id }: { id: string }) {
-  const [message] = await getMessageById({ id });
+  const serverSecret = getServerSecret();
+  const message = await fetchQuery(api.messages.getByExternalId, {
+    externalId: id,
+    serverSecret,
+  });
 
-  await deleteMessagesByChatIdAfterTimestamp({
+  if (!message) {
+    return;
+  }
+
+  await fetchMutation(api.messages.deleteAfterTimestamp, {
     chatId: message.chatId,
-    timestamp: message.createdAt,
+    timestamp: message._creationTime,
+    serverSecret,
   });
 }
 
@@ -49,5 +55,19 @@ export async function updateChatVisibility({
   chatId: string;
   visibility: VisibilityType;
 }) {
-  await updateChatVisibilityById({ chatId, visibility });
+  const serverSecret = getServerSecret();
+  const chat = await fetchQuery(api.chats.getByExternalId, {
+    externalId: chatId,
+    serverSecret,
+  });
+
+  if (!chat) {
+    return;
+  }
+
+  await fetchMutation(api.chats.updateVisibilityInternal, {
+    id: chat._id,
+    visibility,
+    serverSecret,
+  });
 }

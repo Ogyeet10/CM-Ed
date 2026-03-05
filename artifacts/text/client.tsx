@@ -11,7 +11,7 @@ import {
   UndoIcon,
 } from "@/components/icons";
 import { Editor } from "@/components/text-editor";
-import type { Suggestion } from "@/lib/db/schema";
+import type { Suggestion } from "@/lib/types/convex";
 import { getSuggestions } from "../actions";
 
 type TextArtifactMetadata = {
@@ -76,7 +76,15 @@ export const textArtifact = new Artifact<"text", TextArtifactMetadata>({
     }
 
     return (
-      <div className="flex flex-row px-4 pb-8 pt-2 md:px-20 md:pb-20 md:pt-6">
+      <div
+        className="flex flex-row pb-8 pt-2 md:pb-20 md:pt-6"
+        style={{
+          paddingLeft:
+            "clamp(1rem, calc(var(--artifact-content-width, 800px) * 0.06), 5rem)",
+          paddingRight:
+            "clamp(1rem, calc(var(--artifact-content-width, 800px) * 0.06), 5rem)",
+        }}
+      >
         <Editor
           content={content}
           currentVersionIndex={currentVersionIndex}

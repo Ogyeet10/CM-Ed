@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { JetBrains_Mono, Space_Mono } from "next/font/google";
 import { Toaster } from "sonner";
+import { ConvexClientProvider } from "@/components/convex-client-provider";
 import { ThemeProvider } from "@/components/theme-provider";
 
 import "./globals.css";
@@ -85,7 +86,9 @@ export default function RootLayout({
           enableSystem
         >
           <Toaster position="top-center" />
-          <SessionProvider>{children}</SessionProvider>
+          <ConvexClientProvider>
+            <SessionProvider>{children}</SessionProvider>
+          </ConvexClientProvider>
         </ThemeProvider>
       </body>
     </html>

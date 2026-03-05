@@ -1,4 +1,4 @@
-import { memo } from "react";
+import { memo, type ReactNode, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { useArtifact } from "@/hooks/use-artifact";
 import type { ArtifactKind } from "./artifact";
@@ -26,18 +26,63 @@ type DocumentToolResultProps = {
   type: "create" | "update" | "request-suggestions";
   result: { id: string; title: string; kind: ArtifactKind };
   isReadonly: boolean;
+  customLabel?: string;
+  customIcon?: ReactNode;
+  autoOpen?: boolean;
 };
 
 function PureDocumentToolResult({
   type,
   result,
   isReadonly,
+  customLabel,
+  customIcon,
+  autoOpen,
 }: DocumentToolResultProps) {
   const { setArtifact } = useArtifact();
+  const buttonRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (!autoOpen || isReadonly) {
+      return;
+    }
+
+    const rect = buttonRef.current?.getBoundingClientRect();
+    if (!rect || rect.width === 0 || rect.height === 0) {
+      return;
+    }
+
+    const boundingBox = {
+      top: rect.top,
+      left: rect.left,
+      width: rect.width,
+      height: rect.height,
+    };
+
+    setArtifact((currentArtifact) => {
+      if (
+        currentArtifact.isVisible &&
+        currentArtifact.documentId === result.id &&
+        currentArtifact.kind === result.kind
+      ) {
+        return currentArtifact;
+      }
+
+      return {
+        documentId: result.id,
+        kind: result.kind,
+        content: currentArtifact.content,
+        title: result.title,
+        isVisible: true,
+        status: "idle",
+        boundingBox,
+      };
+    });
+  }, [autoOpen, isReadonly, result.id, result.kind, result.title, setArtifact]);
 
   return (
     <button
-      className="flex w-fit cursor-pointer flex-row items-start gap-3 rounded-xl border bg-background px-3 py-2"
+      className="flex max-w-full w-fit cursor-pointer flex-row items-start gap-3 rounded-xl border bg-background px-3 py-2"
       onClick={(event) => {
         if (isReadonly) {
           toast.error(
@@ -65,19 +110,21 @@ function PureDocumentToolResult({
           boundingBox,
         }));
       }}
+      ref={buttonRef}
       type="button"
     >
       <div className="mt-1 text-muted-foreground">
-        {type === "create" ? (
-          <FileIcon />
-        ) : type === "update" ? (
-          <PencilEditIcon />
-        ) : type === "request-suggestions" ? (
-          <MessageIcon />
-        ) : null}
+        {customIcon ??
+          (type === "create" ? (
+            <FileIcon />
+          ) : type === "update" ? (
+            <PencilEditIcon />
+          ) : type === "request-suggestions" ? (
+            <MessageIcon />
+          ) : null)}
       </div>
-      <div className="text-left">
-        {`${getActionText(type, "past")} "${result.title}"`}
+      <div className="min-w-0 break-words whitespace-normal text-left">
+        {customLabel ?? `${getActionText(type, "past")} "${result.title}"`}
       </div>
     </button>
   );
@@ -92,18 +139,22 @@ type DocumentToolCallProps = {
     | { id: string; description: string } // for update
     | { documentId: string }; // for request-suggestions
   isReadonly: boolean;
+  customLabel?: string;
+  customIcon?: ReactNode;
 };
 
 function PureDocumentToolCall({
   type,
   args,
   isReadonly,
+  customLabel,
+  customIcon,
 }: DocumentToolCallProps) {
   const { setArtifact } = useArtifact();
 
   return (
     <button
-      className="cursor pointer flex w-fit flex-row items-start justify-between gap-3 rounded-xl border px-3 py-2"
+      className="cursor pointer flex max-w-full w-fit flex-row items-start justify-between gap-3 rounded-xl border px-3 py-2"
       onClick={(event) => {
         if (isReadonly) {
           toast.error(
@@ -131,25 +182,27 @@ function PureDocumentToolCall({
     >
       <div className="flex flex-row items-start gap-3">
         <div className="mt-1 text-zinc-500">
-          {type === "create" ? (
-            <FileIcon />
-          ) : type === "update" ? (
-            <PencilEditIcon />
-          ) : type === "request-suggestions" ? (
-            <MessageIcon />
-          ) : null}
+          {customIcon ??
+            (type === "create" ? (
+              <FileIcon />
+            ) : type === "update" ? (
+              <PencilEditIcon />
+            ) : type === "request-suggestions" ? (
+              <MessageIcon />
+            ) : null)}
         </div>
 
-        <div className="text-left">
-          {`${getActionText(type, "present")} ${
-            type === "create" && "title" in args && args.title
-              ? `"${args.title}"`
-              : type === "update" && "description" in args
-                ? `"${args.description}"`
-                : type === "request-suggestions"
-                  ? "for document"
-                  : ""
-          }`}
+        <div className="min-w-0 break-words whitespace-normal text-left">
+          {customLabel ??
+            `${getActionText(type, "present")} ${
+              type === "create" && "title" in args && args.title
+                ? `"${args.title}"`
+                : type === "update" && "description" in args
+                  ? `"${args.description}"`
+                  : type === "request-suggestions"
+                    ? "for document"
+                    : ""
+            }`}
         </div>
       </div>
 

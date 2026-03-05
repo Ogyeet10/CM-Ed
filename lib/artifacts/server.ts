@@ -1,11 +1,13 @@
 import type { UIMessageStreamWriter } from "ai";
 import type { Session } from "next-auth";
+import { chartDocumentHandler } from "@/artifacts/chart/server";
 import { codeDocumentHandler } from "@/artifacts/code/server";
 import { sheetDocumentHandler } from "@/artifacts/sheet/server";
 import { textDocumentHandler } from "@/artifacts/text/server";
 import type { ArtifactKind } from "@/components/artifact";
-import { saveDocument } from "../db/queries";
-import type { Document } from "../db/schema";
+import { api } from "@/convex/_generated/api";
+import type { Id } from "@/convex/_generated/dataModel";
+import { fetchMutation, getServerSecret } from "../convex";
 import type { ChatMessage } from "../types";
 
 export type SaveDocumentProps = {
@@ -24,7 +26,14 @@ export type CreateDocumentCallbackProps = {
 };
 
 export type UpdateDocumentCallbackProps = {
-  document: Document;
+  document: {
+    id: string;
+    documentId?: string;
+    title: string;
+    content?: string | null;
+    kind: string;
+    createdAt: Date;
+  };
   description: string;
   dataStream: UIMessageStreamWriter<ChatMessage>;
   session: Session;
@@ -52,12 +61,14 @@ export function createDocumentHandler<T extends ArtifactKind>(config: {
       });
 
       if (args.session?.user?.id) {
-        await saveDocument({
-          id: args.id,
+        const serverSecret = getServerSecret();
+        await fetchMutation(api.documents.save, {
+          documentId: args.id,
           title: args.title,
           content: draftContent,
           kind: config.kind,
-          userId: args.session.user.id,
+          userId: args.session.user.id as Id<"users">,
+          serverSecret,
         });
       }
 
@@ -72,12 +83,15 @@ export function createDocumentHandler<T extends ArtifactKind>(config: {
       });
 
       if (args.session?.user?.id) {
-        await saveDocument({
-          id: args.document.id,
+        const serverSecret = getServerSecret();
+        const docId = args.document.documentId ?? args.document.id;
+        await fetchMutation(api.documents.save, {
+          documentId: docId,
           title: args.document.title,
           content: draftContent,
           kind: config.kind,
-          userId: args.session.user.id,
+          userId: args.session.user.id as Id<"users">,
+          serverSecret,
         });
       }
 
@@ -93,6 +107,7 @@ export const documentHandlersByArtifactKind: DocumentHandler[] = [
   textDocumentHandler,
   codeDocumentHandler,
   sheetDocumentHandler,
+  chartDocumentHandler,
 ];
 
 export const artifactKinds = ["text", "code", "sheet"] as const;

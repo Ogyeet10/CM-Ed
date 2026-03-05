@@ -44,7 +44,7 @@ export const codeDocumentHandler = createDocumentHandler<"code">({
 
     const { fullStream } = streamObject({
       model: getArtifactModel(),
-      system: updateDocumentPrompt(document.content, "code"),
+      system: updateDocumentPrompt(document.content ?? null, "code"),
       prompt: description,
       schema: z.object({
         code: z.string(),

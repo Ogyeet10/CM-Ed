@@ -2,6 +2,10 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   cacheComponents: true,
+  reactCompiler: true,
+  turbopack: {
+    root: "/Users/aidanleuenberger/Code/CM-Ed",
+  },
   images: {
     remotePatterns: [
       {

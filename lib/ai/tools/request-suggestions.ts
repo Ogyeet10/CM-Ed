@@ -1,8 +1,9 @@
 import { Output, streamText, tool, type UIMessageStreamWriter } from "ai";
 import type { Session } from "next-auth";
 import { z } from "zod";
-import { getDocumentById, saveSuggestions } from "@/lib/db/queries";
-import type { Suggestion } from "@/lib/db/schema";
+import { api } from "@/convex/_generated/api";
+import type { Id } from "@/convex/_generated/dataModel";
+import { fetchMutation, fetchQuery, getServerSecret } from "@/lib/convex";
 import type { ChatMessage } from "@/lib/types";
 import { generateUUID } from "@/lib/utils";
 import { getArtifactModel } from "../providers";
@@ -27,7 +28,11 @@ export const requestSuggestions = ({
         ),
     }),
     execute: async ({ documentId }) => {
-      const document = await getDocumentById({ id: documentId });
+      const serverSecret = getServerSecret();
+      const document = await fetchQuery(api.documents.getLatestByDocumentId, {
+        documentId,
+        serverSecret,
+      });
 
       if (!document || !document.content) {
         return {
@@ -35,10 +40,14 @@ export const requestSuggestions = ({
         };
       }
 
-      const suggestions: Omit<
-        Suggestion,
-        "userId" | "createdAt" | "documentCreatedAt"
-      >[] = [];
+      const suggestions: Array<{
+        originalText: string;
+        suggestedText: string;
+        description: string;
+        id: string;
+        documentId: string;
+        isResolved: boolean;
+      }> = [];
 
       const { partialOutputStream } = streamText({
         model: getArtifactModel(),
@@ -83,7 +92,7 @@ export const requestSuggestions = ({
 
           dataStream.write({
             type: "data-suggestion",
-            data: suggestion as Suggestion,
+            data: suggestion,
             transient: true,
           });
 
@@ -93,15 +102,19 @@ export const requestSuggestions = ({
       }
 
       if (session.user?.id) {
-        const userId = session.user.id;
+        const userId = session.user.id as Id<"users">;
 
-        await saveSuggestions({
-          suggestions: suggestions.map((suggestion) => ({
-            ...suggestion,
+        await fetchMutation(api.suggestions.save, {
+          suggestions: suggestions.map((s) => ({
+            documentId: s.documentId,
+            documentCreatedAt: document._creationTime,
+            originalText: s.originalText,
+            suggestedText: s.suggestedText,
+            description: s.description,
+            isResolved: s.isResolved,
             userId,
-            createdAt: new Date(),
-            documentCreatedAt: document.createdAt,
           })),
+          serverSecret,
         });
       }
 

@@ -1,4 +1,5 @@
 import type { UseChatHelpers } from "@ai-sdk/react";
+import { useMutation, useQuery } from "convex/react";
 import { formatDistance } from "date-fns";
 import equal from "fast-deep-equal";
 import { AnimatePresence, motion } from "framer-motion";
@@ -8,24 +9,27 @@ import {
   type SetStateAction,
   useCallback,
   useEffect,
+  useRef,
   useState,
 } from "react";
-import useSWR, { useSWRConfig } from "swr";
 import { useDebounceCallback, useWindowSize } from "usehooks-ts";
+import { chartArtifact } from "@/artifacts/chart/client";
 import { codeArtifact } from "@/artifacts/code/client";
 import { imageArtifact } from "@/artifacts/image/client";
 import { sheetArtifact } from "@/artifacts/sheet/client";
 import { textArtifact } from "@/artifacts/text/client";
-import { useArtifact } from "@/hooks/use-artifact";
-import type { Document, Vote } from "@/lib/db/schema";
+import { api } from "@/convex/_generated/api";
+import { initialArtifactData, useArtifact } from "@/hooks/use-artifact";
 import type { Attachment, ChatMessage } from "@/lib/types";
-import { fetcher } from "@/lib/utils";
+import type { Vote } from "@/lib/types/convex";
+import { toDocumentShape } from "@/lib/types/convex";
 import { ArtifactActions } from "./artifact-actions";
 import { ArtifactCloseButton } from "./artifact-close-button";
 import { ArtifactMessages } from "./artifact-messages";
 import { MultimodalInput } from "./multimodal-input";
 import { Toolbar } from "./toolbar";
 import { useSidebar } from "./ui/sidebar";
+import { useUser } from "./user-provider";
 import { VersionFooter } from "./version-footer";
 import type { VisibilityType } from "./visibility-selector";
 
@@ -34,6 +38,7 @@ export const artifactDefinitions = [
   codeArtifact,
   imageArtifact,
   sheetArtifact,
+  chartArtifact,
 ];
 export type ArtifactKind = (typeof artifactDefinitions)[number]["kind"];
 
@@ -88,31 +93,32 @@ function PureArtifact({
   selectedModelId: string;
 }) {
   const { artifact, setArtifact, metadata, setMetadata } = useArtifact();
+  const { userId } = useUser();
 
-  const {
-    data: documents,
-    isLoading: isDocumentsFetching,
-    mutate: mutateDocuments,
-  } = useSWR<Document[]>(
-    artifact.documentId !== "init" && artifact.status !== "streaming"
-      ? `/api/document?id=${artifact.documentId}`
-      : null,
-    fetcher
+  const shouldFetch =
+    artifact.documentId !== "init" && artifact.status !== "streaming";
+
+  const rawDocuments = useQuery(
+    api.documents.getByDocumentIdPublic,
+    shouldFetch ? { documentId: artifact.documentId } : "skip"
   );
 
+  const documents = rawDocuments?.map(toDocumentShape);
+  const isDocumentsFetching = shouldFetch && rawDocuments === undefined;
+
   const [mode, setMode] = useState<"edit" | "diff">("edit");
-  const [document, setDocument] = useState<Document | null>(null);
   const [currentVersionIndex, setCurrentVersionIndex] = useState(-1);
 
   const { open: isSidebarOpen } = useSidebar();
 
+  const document =
+    documents && documents.length > 0 ? (documents.at(-1) ?? null) : null;
+
   useEffect(() => {
     if (documents && documents.length > 0) {
+      setCurrentVersionIndex(documents.length - 1);
       const mostRecentDocument = documents.at(-1);
-
       if (mostRecentDocument) {
-        setDocument(mostRecentDocument);
-        setCurrentVersionIndex(documents.length - 1);
         setArtifact((currentArtifact) => ({
           ...currentArtifact,
           content: mostRecentDocument.content ?? "",
@@ -121,59 +127,42 @@ function PureArtifact({
     }
   }, [documents, setArtifact]);
 
+  // Fallback: if the chat stream has ended but artifact status is still
+  // "streaming" (e.g. the data-finish event was missed or an error occurred),
+  // force it back to idle so the document fetch can proceed.
   useEffect(() => {
-    mutateDocuments();
-  }, [mutateDocuments]);
+    if (status !== "streaming" && artifact.status === "streaming") {
+      setArtifact((current) => ({ ...current, status: "idle" }));
+    }
+  }, [status, artifact.status, setArtifact]);
 
-  const { mutate } = useSWRConfig();
+  const saveDocumentMutation = useMutation(api.documents.saveFromClient);
   const [isContentDirty, setIsContentDirty] = useState(false);
 
   const handleContentChange = useCallback(
-    (updatedContent: string) => {
-      if (!artifact) {
+    async (updatedContent: string) => {
+      if (!artifact || !userId) {
         return;
       }
 
-      mutate<Document[]>(
-        `/api/document?id=${artifact.documentId}`,
-        async (currentDocuments) => {
-          if (!currentDocuments) {
-            return [];
-          }
+      const currentDocument = document;
+      if (!currentDocument || !currentDocument.content) {
+        setIsContentDirty(false);
+        return;
+      }
 
-          const currentDocument = currentDocuments.at(-1);
-
-          if (!currentDocument || !currentDocument.content) {
-            setIsContentDirty(false);
-            return currentDocuments;
-          }
-
-          if (currentDocument.content !== updatedContent) {
-            await fetch(`/api/document?id=${artifact.documentId}`, {
-              method: "POST",
-              body: JSON.stringify({
-                title: artifact.title,
-                content: updatedContent,
-                kind: artifact.kind,
-              }),
-            });
-
-            setIsContentDirty(false);
-
-            const newDocument = {
-              ...currentDocument,
-              content: updatedContent,
-              createdAt: new Date(),
-            };
-
-            return [...currentDocuments, newDocument];
-          }
-          return currentDocuments;
-        },
-        { revalidate: false }
-      );
+      if (currentDocument.content !== updatedContent) {
+        await saveDocumentMutation({
+          documentId: artifact.documentId,
+          title: artifact.title,
+          content: updatedContent,
+          kind: artifact.kind,
+          userId,
+        });
+        setIsContentDirty(false);
+      }
     },
-    [artifact, mutate]
+    [artifact, document, userId, saveDocumentMutation]
   );
 
   const debouncedHandleContentChange = useDebounceCallback(
@@ -230,6 +219,71 @@ function PureArtifact({
   };
 
   const [isToolbarVisible, setIsToolbarVisible] = useState(false);
+
+  const MIN_PANEL_WIDTH = 300;
+  const MAX_PANEL_WIDTH = 700;
+  const [panelWidth, setPanelWidth] = useState(400);
+  const isResizing = useRef(false);
+  const [hasAnimatedIn, setHasAnimatedIn] = useState(false);
+
+  useEffect(() => {
+    if (!artifact.isVisible) {
+      setHasAnimatedIn(false);
+    }
+  }, [artifact.isVisible]);
+
+  useEffect(() => {
+    if (!artifact.isVisible) {
+      return;
+    }
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") {
+        return;
+      }
+
+      setArtifact((currentArtifact) =>
+        currentArtifact.status === "streaming"
+          ? {
+              ...currentArtifact,
+              isVisible: false,
+            }
+          : { ...initialArtifactData, status: "idle" }
+      );
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [artifact.isVisible, setArtifact]);
+
+  const handleResizeStart = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    isResizing.current = true;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isResizing.current) {
+        return;
+      }
+      const newWidth = Math.min(
+        MAX_PANEL_WIDTH,
+        Math.max(MIN_PANEL_WIDTH, e.clientX)
+      );
+      setPanelWidth(newWidth);
+    };
+
+    const handleMouseUp = () => {
+      isResizing.current = false;
+      window.document.removeEventListener("mousemove", handleMouseMove);
+      window.document.removeEventListener("mouseup", handleMouseUp);
+      window.document.body.style.cursor = "";
+      window.document.body.style.userSelect = "";
+    };
+
+    window.document.body.style.cursor = "col-resize";
+    window.document.body.style.userSelect = "none";
+    window.document.addEventListener("mousemove", handleMouseMove);
+    window.document.addEventListener("mouseup", handleMouseUp);
+  }, []);
 
   /*
    * NOTE: if there are no documents, or if
@@ -300,7 +354,7 @@ function PureArtifact({
                   damping: 30,
                 },
               }}
-              className="relative h-dvh w-[400px] shrink-0 bg-muted dark:bg-background"
+              className="relative h-dvh shrink-0 bg-muted dark:bg-background"
               exit={{
                 opacity: 0,
                 x: 0,
@@ -308,12 +362,13 @@ function PureArtifact({
                 transition: { duration: 0 },
               }}
               initial={{ opacity: 0, x: 10, scale: 1 }}
+              style={{ width: panelWidth }}
             >
               <AnimatePresence>
                 {!isCurrentVersion && (
                   <motion.div
                     animate={{ opacity: 1 }}
-                    className="absolute top-0 left-0 z-50 h-dvh w-[400px] bg-zinc-900/50"
+                    className="absolute top-0 left-0 z-50 h-dvh w-full bg-zinc-900/50"
                     exit={{ opacity: 0 }}
                     initial={{ opacity: 0 }}
                   />
@@ -354,6 +409,21 @@ function PureArtifact({
             </motion.div>
           )}
 
+          {!isMobile && (
+            <div
+              aria-label="Resize panels"
+              aria-orientation="vertical"
+              aria-valuemax={MAX_PANEL_WIDTH}
+              aria-valuemin={MIN_PANEL_WIDTH}
+              aria-valuenow={panelWidth}
+              className="fixed top-0 z-50 h-dvh w-2 cursor-col-resize bg-transparent hover:bg-border/50 active:bg-border transition-colors"
+              onMouseDown={handleResizeStart}
+              role="separator"
+              style={{ left: panelWidth - 4 }}
+              tabIndex={0}
+            />
+          )}
+
           <motion.div
             animate={
               isMobile
@@ -372,23 +442,35 @@ function PureArtifact({
                       duration: 0.8,
                     },
                   }
-                : {
-                    opacity: 1,
-                    x: 400,
-                    y: 0,
-                    height: windowHeight,
-                    width: windowWidth
-                      ? windowWidth - 400
-                      : "calc(100dvw-400px)",
-                    borderRadius: 0,
-                    transition: {
-                      delay: 0,
-                      type: "spring",
-                      stiffness: 300,
-                      damping: 30,
-                      duration: 0.8,
-                    },
-                  }
+                : hasAnimatedIn
+                  ? {
+                      opacity: 1,
+                      x: 0,
+                      y: 0,
+                      height: windowHeight,
+                      width: windowWidth
+                        ? windowWidth - panelWidth
+                        : `calc(100dvw - ${panelWidth}px)`,
+                      borderRadius: 0,
+                      transition: { duration: 0 },
+                    }
+                  : {
+                      opacity: 1,
+                      x: panelWidth,
+                      y: 0,
+                      height: windowHeight,
+                      width: windowWidth
+                        ? windowWidth - panelWidth
+                        : `calc(100dvw - ${panelWidth}px)`,
+                      borderRadius: 0,
+                      transition: {
+                        delay: 0,
+                        type: "spring",
+                        stiffness: 300,
+                        damping: 30,
+                        duration: 0.8,
+                      },
+                    }
             }
             className="fixed flex h-dvh flex-col overflow-y-scroll border-zinc-200 bg-background md:border-l dark:border-zinc-700 dark:bg-muted"
             exit={{
@@ -419,6 +501,23 @@ function PureArtifact({
                     width: artifact.boundingBox.width,
                     borderRadius: 50,
                   }
+            }
+            onAnimationComplete={() => {
+              if (!hasAnimatedIn) {
+                setHasAnimatedIn(true);
+              }
+            }}
+            style={
+              hasAnimatedIn && !isMobile
+                ? {
+                    left: panelWidth,
+                    top: 0,
+                    height: windowHeight,
+                    width: windowWidth
+                      ? windowWidth - panelWidth
+                      : `calc(100dvw - ${panelWidth}px)`,
+                  }
+                : undefined
             }
           >
             <div className="flex flex-row items-start justify-between p-2">
@@ -459,7 +558,18 @@ function PureArtifact({
               />
             </div>
 
-            <div className="h-full max-w-full! items-center overflow-y-scroll bg-background dark:bg-muted">
+            <div
+              className="h-full max-w-full! items-center overflow-y-scroll bg-background dark:bg-muted"
+              style={
+                {
+                  "--artifact-content-width": `${
+                    isMobile
+                      ? (windowWidth ?? 0)
+                      : (windowWidth ?? 0) - panelWidth
+                  }px`,
+                } as React.CSSProperties
+              }
+            >
               <artifactDefinition.content
                 content={
                   isCurrentVersion
