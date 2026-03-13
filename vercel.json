@@ -1,3 +1,4 @@
 {
-  "framework": "nextjs"
+  "framework": "nextjs",
+  "ignoreCommand": "git diff --name-only HEAD~1 | grep -qvE '^(LICENSE|README\\.md)$'"
 }
